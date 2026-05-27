@@ -191,8 +191,8 @@ for evalindex = 1:numevals
     % arg == zero if eval on next-i edge, but then v = 0. %
     arg=(r(i)+r(next)-edgeLength(i))/(r(i)+r(next)+edgeLength(i));
     if(arg == 0)
-      'in calcp'
-      keyboard;
+      %'in calcp'
+      %keyboard;
     end
     fln = -log(arg);
     if (arg>0.0) 

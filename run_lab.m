@@ -1,0 +1,100 @@
+clear; clc; close all;
+
+
+fprintf('--- Zadanie 1 ---\n');
+
+fprintf('Obliczanie pojemności dla płaszczyzny (plate144.qif)...\n');
+[C_plate144, ~, sigma_plate144] = calccap('plate144.qif', "colloc");
+fprintf('Pojemność płaszczyzny plate144: %e F\n\n', C_plate144);
+
+vissigma('plate144.qif', sigma_plate144);
+title('Rozkład gęstości ładunku - Płaszczyzna (plate144)');
+
+fprintf('Obliczanie pojemności dla sfery (sphere768.qif)...\n');
+[C_sphere768, ~, sigma_sphere768] = calccap('sphere768.qif', "colloc");
+fprintf('Pojemność sfery sphere768: %e F\n\n', C_sphere768);
+
+vissigma('sphere768.qif', sigma_sphere768);
+title('Rozkład gęstości ładunku - Sfera (sphere768)');
+
+fprintf('\n--- Zadanie 2 ---\n');
+
+C_ref = 40.8e-12;
+files = {'plate9.qif', 'plate36.qif', 'plate144.qif'};
+num_panels = [9, 36, 144];
+errors = zeros(1, length(files));
+
+for i = 1:length(files)
+    C_calc = calccap(files{i}, "colloc");
+    errors(i) = abs(C_calc - C_ref) / C_ref;
+    fprintf('Panele: %3d | C: %e F | Błąd: %.2f%%\n', num_panels(i), C_calc, errors(i)*100);
+end
+
+figure;
+plot(num_panels, errors * 100, '-o', 'LineWidth', 2);
+grid on;
+xlabel('Liczba elementów (paneli)');
+ylabel('Błąd względny [%]');
+title('Zbieżność błędu - Metoda kolokacji');
+
+
+fprintf('\n--- Zadanie 3 ---\n');
+
+sphere_files = {'sphere48.qif', 'sphere192.qif', 'sphere768.qif'};
+sphere_panels = [48, 192, 768];
+times = zeros(1, length(sphere_files));
+
+for i = 1:length(sphere_files)
+    tic;
+    calccap(sphere_files{i}, "colloc");
+    times(i) = toc;
+    fprintf('Sfera panele: %3d | Czas całkowity: %.4f s\n', sphere_panels(i), times(i));
+end
+
+figure;
+plot(sphere_panels, times, '-s', 'LineWidth', 2);
+grid on;
+xlabel('Liczba elementów (paneli)');
+ylabel('Czas obliczeń [s]');
+title('Czas obliczeń w funkcji liczby elementów');
+
+fprintf('\n--- Zadanie 4 ---\n');
+
+[~, A_plate] = calccap('plate144.qif', "colloc");
+diff_plate = norm(A_plate - A_plate') / norm(A_plate);
+fprintf('Miara niesymetrii dla płaszczyzny (plate144): %e\n', diff_plate);
+
+[~, A_sphere] = calccap('sphere192.qif', "colloc");
+diff_sphere = norm(A_sphere - A_sphere') / norm(A_sphere);
+fprintf('Miara niesymetrii dla sfery (sphere192): %e\n', diff_sphere);
+
+
+fprintf('\n--- Zadanie 5 i 6 ---\n');
+
+C_ref = 40.8e-12;
+files = {'plate9.qif', 'plate36.qif', 'plate144.qif'};
+num_panels = [9, 36, 144];
+
+errors_colloc = zeros(1, length(files));
+errors_galerkin = zeros(1, length(files));
+
+for i = 1:length(files)
+    
+    C_col = calccap(files{i}, "colloc"); 
+    C_gal = calccap(files{i}, "galerkin");
+    
+    errors_colloc(i) = abs(C_col - C_ref) / C_ref * 100;
+    errors_galerkin(i) = abs(C_gal - C_ref) / C_ref * 100;
+    
+    fprintf('Panele: %3d | Błąd Kolokacji: %.2f%% | Błąd Galerkina: %.2f%%\n', ...
+        num_panels(i), errors_colloc(i), errors_galerkin(i));
+end
+
+figure;
+plot(num_panels, errors_colloc, '-o', 'LineWidth', 2); hold on;
+plot(num_panels, errors_galerkin, '-s', 'LineWidth', 2);
+grid on;
+xlabel('Liczba elementów (paneli)');
+ylabel('Błąd względny [%]');
+legend('Metoda Kolokacji', 'Metoda Galerkina');
+title('Porównanie dokładności: Kolokacja vs Galerkin');

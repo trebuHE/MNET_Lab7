@@ -10,11 +10,11 @@ function matrix = galerkin(panels)
 %
 % Setting up the Galerkin matrix
 %
- [rows,cols,numpanels] = size(panels);
+[rows,cols,numpanels] = size(panels);
  matrix = zeros(numpanels, numpanels);
 
- M = ???;
- [tempx tempy] = meshgrid(1/(2*M):1/M:1,1/(2*M):1/M:1);
+ M = 9;
+ [tempx, tempy] = meshgrid(1/(2*M):1/M:1,1/(2*M):1/M:1);
  evalgrid = [reshape(tempx,M*M,1) reshape(tempy,M*M,1) zeros(M*M,1)];
 
 %
@@ -28,11 +28,21 @@ function matrix = galerkin(panels)
 %         square plate example. Locations of panel edges can be used to
 %         find evaluation points on the i-th panel.
  
-   for j=1:numpanels
-      numverts = panels(1,1,j);
-      panel = panels(2:numverts+1,:,j);
-      [area, collocpt, Z, fss] = calcp(panel, evalpoints);	
-      matrix(i,j) = ???;
-   end
+for i = 1:numpanels
+     numverts_i = panels(1,1,i);
+     panel_i = panels(2:numverts_i+1,:,i);
+     
+     [area_i, ~, ~, ~] = calcp(panel_i, [0 0 0]);
+     v1 = panel_i(1, :);
+     a = sqrt(area_i);
+     
+     evalpoints = [v1(1) + evalgrid(:,1)*a, v1(2) + evalgrid(:,2)*a, zeros(M*M,1)];
 
+     for j=1:numpanels
+        numverts = panels(1,1,j);
+        panel = panels(2:numverts+1,:,j);
+        [area, collocpt, Z, fss] = calcp(panel, evalpoints);	
+        matrix(i,j) = sum(fss) * area_i / (M * M);
+     end
+ end
 end

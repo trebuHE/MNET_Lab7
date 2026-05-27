@@ -1,4 +1,4 @@
-function [Creal,matrix,qout] = calccap(infile)
+function [Creal,matrix,qout] = calccap(infile, method)
 
 % Permitivity of free space.
   E_0 = 8.854187818E-12;
@@ -13,20 +13,26 @@ done = 'read input file'
 
 done = 'generated collocation points'
 
-% Generate the collocation matrix
-  [matrix] = collocation(panels,centroids);
+ if(method == "colloc")
+    [matrix] = collocation(panels,centroids);
+ elseif (method == "galerkin")
 
-% Or: Generate the Galerkin matrix
-%
-%
+    % Or: Generate the Galerkin matrix
+    [matrix] = galerkin(panels);
+ end
   
 done = 'generated matrix'
 
 % Create the rhs
   [r,c] = size(matrix);
-  rhs = ones(r,1);
 
+  if(method == "colloc")
+    rhs = ones(r,1);
+  elseif(method == "galerkin")
+    rhs = areas';
+  end
 % Solve for the charge density vector
+
  q = matrix \ rhs;
  qout = q;
 
